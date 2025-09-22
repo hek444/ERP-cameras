@@ -1,0 +1,6 @@
+docker_volumes/*
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.env

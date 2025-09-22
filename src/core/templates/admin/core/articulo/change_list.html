@@ -1,0 +1,41 @@
+{% extends "admin/change_list.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtenemos los totales que pasamos desde admin.py
+    const totalCoste = {{ total_coste|default:"0" }};
+    const totalObjetiva = {{ total_objetiva|default:"0" }}; // <-- NUEVO
+    const totalVenta = {{ total_venta|default:"0" }};
+    const totalBeneficio = {{ total_beneficio|default:"0" }};
+
+    const resultsTable = document.querySelector('#result_list');
+
+    if (resultsTable) {
+        let tfoot = resultsTable.querySelector('tfoot');
+        if (!tfoot) {
+            tfoot = document.createElement('tfoot');
+            resultsTable.appendChild(tfoot);
+        }
+
+        const row = tfoot.insertRow(-1);
+        row.style.fontWeight = 'bold';
+
+        // --- CÁLCULO DINÁMICO DEL COLSPAN ---
+        const headerCols = resultsTable.querySelector('thead tr').children.length;
+        const totalValueCols = 4; // Ahora son 4 columnas numéricas
+        const colspan = headerCols - totalValueCols;
+
+        // --- FILA DE TOTALES ACTUALIZADA ---
+        row.innerHTML = `
+            <td colspan="${colspan}" style="text-align: right;">Totales:</td>
+            <td style="text-align: left; white-space: nowrap;">${totalCoste.toFixed(2)} €</td>
+            <td style="text-align: left; white-space: nowrap;">${totalObjetiva.toFixed(2)} €</td>
+            <td style="text-align: left; white-space: nowrap;">${totalVenta.toFixed(2)} €</td>
+            <td style="text-align: left; white-space: nowrap;">${totalBeneficio.toFixed(2)} €</td>
+        `;
+    }
+});
+</script>
+{% endblock %}

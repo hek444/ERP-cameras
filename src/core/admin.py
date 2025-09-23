@@ -51,6 +51,8 @@ class ArticuloAdmin(admin.ModelAdmin):
         'nombre',
         'ver_pedido',
         'tipo_articulo',
+        'coste_yen_con_simbolo',
+        'coste_euro_con_simbolo',
         'coste_total_con_simbolo',
         'venta_objetiva_con_simbolo', # <-- AÑADIDO
         'precio_venta',
@@ -59,6 +61,18 @@ class ArticuloAdmin(admin.ModelAdmin):
     list_filter = ('pedido', 'marca', 'tipo_articulo')
     search_fields = ('nombre', 'id_buyee', 'pedido__descripcion')
     list_per_page = 25
+
+    # --- MÉTODOS DE FORMATO PARA LAS MONEDAS ---
+    def coste_euro_con_simbolo(self, obj):
+        return f"{obj.coste_euro:.2f} €"
+    coste_euro_con_simbolo.short_description = 'Coste Euro'
+    coste_euro_con_simbolo.admin_order_field = 'coste_euro'
+
+    def coste_yen_con_simbolo(self, obj):
+        # Añadimos formato de miles para que sea más legible
+        return f"¥{obj.coste_yen:,}"
+    coste_yen_con_simbolo.short_description = 'Coste Yen'
+    coste_yen_con_simbolo.admin_order_field = 'coste_yen'
 
     # --- MÉTODOS DE FORMATO PARA LAS MONEDAS ---
     def coste_total_con_simbolo(self, obj):

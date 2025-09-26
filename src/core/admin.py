@@ -66,7 +66,7 @@ class ArticuloAdmin(admin.ModelAdmin):
         'coste_euro_con_simbolo',
         'coste_total_con_simbolo',
         'venta_objetiva_con_simbolo', # <-- AÑADIDO
-        'precio_venta',
+        'precio_venta_con_simbolo',
         'beneficio_columna'
     )
     list_filter = ('pedido', 'marca', 'tipo_articulo', 'estado')
@@ -86,13 +86,13 @@ class ArticuloAdmin(admin.ModelAdmin):
     # --- MÉTODOS DE FORMATO PARA LAS MONEDAS ---
     def coste_euro_con_simbolo(self, obj):
         return f"{obj.coste_euro:.2f} €"
-    coste_euro_con_simbolo.short_description = 'Coste Euro'
+    coste_euro_con_simbolo.short_description = 'Coste Euro (€)'
     coste_euro_con_simbolo.admin_order_field = 'coste_euro'
 
     def coste_yen_con_simbolo(self, obj):
         # Añadimos formato de miles para que sea más legible
         return f"¥{obj.coste_yen:,}"
-    coste_yen_con_simbolo.short_description = 'Coste Yen'
+    coste_yen_con_simbolo.short_description = 'Coste Yen (¥)'
     coste_yen_con_simbolo.admin_order_field = 'coste_yen'
 
     # --- MÉTODOS DE FORMATO PARA LAS MONEDAS ---
@@ -108,6 +108,13 @@ class ArticuloAdmin(admin.ModelAdmin):
         return "-"
     venta_objetiva_con_simbolo.short_description = 'Venta Objetiva (€)'
     venta_objetiva_con_simbolo.admin_order_field = 'venta_objetiva'
+
+    def precio_venta_con_simbolo(self, obj):
+        if obj.precio_venta is not None:
+            return f"{obj.precio_venta:.2f} €"
+        return "-"
+    precio_venta_con_simbolo.short_description = 'Precio Venta (€)'
+    precio_venta_con_simbolo.admin_order_field = 'precio_venta'
 
     # --- (El resto de tus métodos: get_queryset, etc., se quedan igual PERO changelist_view cambia) ---
     def get_queryset(self, request):

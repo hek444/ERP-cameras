@@ -80,6 +80,11 @@ class Articulo(models.Model):
         COMPLETA = 'COMPLETA', 'Completa'
         OTROS = 'OTROS', 'Otros'
 
+    class EstadoArticulo(models.TextChoices):
+        VENDIDO = 'VENDIDO', 'Vendido'
+        COLECCION = 'COLECCION', 'Colección'
+        DESECHADO = 'DESECHADO', 'Desechado'
+
     pedido = models.ForeignKey(Pedido, related_name='articulos', on_delete=models.CASCADE)
     nombre = models.CharField(max_length=200)
     tipo_articulo = models.CharField(max_length=10, choices=TipoArticulo.choices, default=TipoArticulo.OTROS,)
@@ -87,25 +92,13 @@ class Articulo(models.Model):
     coste_euro = models.DecimalField(max_digits=10, decimal_places=2)
     coste_envio_individual = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, default=0.00)
     marca = models.ForeignKey(Marca, on_delete=models.SET_NULL, null=True, blank=True)
-
-    coste_yen = models.IntegerField(    
-        editable=False, 
-        blank=True, 
-        null=True, 
-        help_text="Calculado automáticamente desde el coste en EUR y la tasa de cambio del pedido."
-    )
-    iva = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        editable=False, 
-        blank=True, 
-        null=True,
-        help_text="IVA calculado automáticamente."
-    )
+    coste_yen = models.IntegerField(editable=False, blank=True, null=True, help_text="Calculado automáticamente desde el coste en EUR y la tasa de cambio del pedido.")
+    iva = models.DecimalField(max_digits=10, decimal_places=2, editable=False, blank=True, null=True,help_text="IVA calculado automáticamente.")
     aduana_imputada = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     precio_venta = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     venta_objetiva = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     coste_envio_nacional = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    estado = models.CharField(max_length=10, choices=EstadoArticulo.choices, default=EstadoArticulo.COLECCION,help_text="El estado actual del artículo.")
 
     # --- SOBRESCRIBIMOS EL MÉTODO SAVE PARA LOS CÁLCULOS ---
     def save(self, *args, **kwargs):

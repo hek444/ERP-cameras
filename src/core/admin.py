@@ -8,6 +8,11 @@ from django.db.models import F, Sum, Value, DecimalField, Case, When
 from django.db.models.functions import Coalesce
 
 
+# --- AÑADE ESTAS LÍNEAS ---
+admin.site.site_header = "ERP Camaras"
+admin.site.site_title = "Portal de Administración ERP Camaras"
+admin.site.index_title = "Bienvenido al portal de ERP Camaras"
+
 # --- ACCIONES DE ADMIN ---
 @admin.action(description="1. Distribuir gastos de aduana")
 def distribuir_aduana_action(modeladmin, request, queryset):
@@ -15,16 +20,19 @@ def distribuir_aduana_action(modeladmin, request, queryset):
         pedido.distribuir_gastos_aduana()
     modeladmin.message_user(request, "Gastos de aduana distribuidos.", "success")
 
+
 @admin.action(description="2. Distribuir coste de envío agrupado")
 def distribuir_envio_action(modeladmin, request, queryset):
     for pedido in queryset:
         pedido.distribuir_coste_envio()
     modeladmin.message_user(request, "Coste de envío agrupado distribuido.", "success")
 
+
 @admin.register(Marca)
 class MarcaAdmin(admin.ModelAdmin):
     list_display = ('nombre',)
     search_fields = ('nombre',) # Añade una barra de búsqueda
+
 
 class ArticuloInline(admin.TabularInline):
     model = Articulo
@@ -36,12 +44,14 @@ class ArticuloInline(admin.TabularInline):
     autocomplete_fields = ['marca']
     extra = 1
 
+
 @admin.register(Pedido)
 class PedidoAdmin(admin.ModelAdmin):
     list_display = ('fecha_pedido', 'descripcion', 'gastos_aduana', 'coste_envio_agrupado')
     inlines = [ArticuloInline]
     # Añadimos la nueva acción
     actions = [distribuir_aduana_action, distribuir_envio_action]
+
 
 @admin.register(Articulo)
 class ArticuloAdmin(admin.ModelAdmin):
@@ -51,6 +61,7 @@ class ArticuloAdmin(admin.ModelAdmin):
         'nombre',
         'ver_pedido',
         'tipo_articulo',
+        'estado',
         'coste_yen_con_simbolo',
         'coste_euro_con_simbolo',
         'coste_total_con_simbolo',
@@ -58,9 +69,19 @@ class ArticuloAdmin(admin.ModelAdmin):
         'precio_venta',
         'beneficio_columna'
     )
-    list_filter = ('pedido', 'marca', 'tipo_articulo')
+    list_filter = ('pedido', 'marca', 'tipo_articulo', 'estado')
     search_fields = ('nombre', 'id_buyee', 'pedido__descripcion')
-    list_per_page = 25
+    list_per_page = 40
+
+    # 2. Hacemos que 'nombre' sea el enlace a la página de detalle
+    list_display_links = ('nombre',)
+
+    # 3. (ESTA ES LA CLAVE) Bloqueamos el resto de campos en la página de detalle
+    readonly_fields = (
+        'pedido', 'marca', 'nombre', 'tipo_articulo', 'id_buyee',
+        'coste_euro', 'coste_yen', 'iva', 'coste_envio_individual',
+        'aduana_imputada', 'coste_envio_nacional', 'venta_objetiva'
+    )
 
     # --- MÉTODOS DE FORMATO PARA LAS MONEDAS ---
     def coste_euro_con_simbolo(self, obj):
@@ -143,8 +164,8 @@ class ArticuloAdmin(admin.ModelAdmin):
     beneficio_columna.short_description = 'Beneficio (€)'
     beneficio_columna.admin_order_field = '_beneficio'
     
-    def has_add_permission(self, request):
-        return False
+    # def has_add_permission(self, request):
+    #     return False
 
-    def has_change_permission(self, request, obj=None):
-        return False
+    # def has_change_permission(self, request, obj=None):
+    #     return False

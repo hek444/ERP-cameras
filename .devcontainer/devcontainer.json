@@ -1,0 +1,8 @@
+{
+    "name": "hek444/sistems:buyee",
+    "dockerComposeFile": [
+        "../docker-compose.yml"
+    ],
+    "service": "django-buyee",
+    "workspaceFolder": "/app"
+}

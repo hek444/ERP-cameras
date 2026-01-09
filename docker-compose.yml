@@ -1,5 +1,5 @@
 services:
-  app:
+  django-buyee:
     build: . 
     image: hek444/sistems:buyee
     container_name: django-buyee
@@ -11,7 +11,7 @@ services:
     command: tail -f /dev/null
 
   mysql:
-    image: mysql:8.0.32
+    image: mysql:8.0.43
     ports:
       - 33061:3306
     env_file: .env

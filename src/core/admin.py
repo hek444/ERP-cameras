@@ -56,6 +56,7 @@ class PedidoAdmin(admin.ModelAdmin):
 @admin.register(Articulo)
 class ArticuloAdmin(admin.ModelAdmin):
     # --- CONFIGURACIÓN DE LA LISTA ACTUALIZADA ---
+    # Número de elementos por página cuando se activa la paginación
     list_display = (
         'marca',
         'nombre',
@@ -153,7 +154,22 @@ class ArticuloAdmin(admin.ModelAdmin):
         extra_context['total_venta'] = total_venta
         extra_context['total_objetiva'] = total_objetiva
         extra_context['total_beneficio'] = total_venta - total_coste
-        return super().changelist_view(request, extra_context=extra_context)
+        # Si hay 100 o menos artículos, mostrar todos en una sola página.
+        # Si hay más de 100, usar `self.list_per_page` para paginar.
+        count = queryset.count()
+        orig_list_per_page = getattr(self, 'list_per_page', None)
+        try:
+            if count <= 100:
+                # Asegurarnos de que sea al menos 1 para evitar valores inválidos
+                self.list_per_page = max(count, 1)
+            else:
+                # mantener el valor configurado (por defecto 40)
+                self.list_per_page = orig_list_per_page
+            return super().changelist_view(request, extra_context=extra_context)
+        finally:
+            # Restaurar el valor original para no afectar otras peticiones
+            if orig_list_per_page is not None:
+                self.list_per_page = orig_list_per_page
 
     def ver_pedido(self, obj):
         url = reverse('admin:core_pedido_change', args=[obj.pedido.pk])

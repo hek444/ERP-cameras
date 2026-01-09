@@ -56,6 +56,7 @@ class PedidoAdmin(admin.ModelAdmin):
 @admin.register(Articulo)
 class ArticuloAdmin(admin.ModelAdmin):
     # --- CONFIGURACIÓN DE LA LISTA ACTUALIZADA ---
+    list_per_page = 100
     list_display = (
         'marca',
         'nombre',

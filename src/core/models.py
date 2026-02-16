@@ -1,5 +1,5 @@
 from decimal import Decimal
-from django.db import models
+from django.db import models, transaction
 from django.db.models import Sum
 
 class Pedido(models.Model):
@@ -22,10 +22,14 @@ class Pedido(models.Model):
         help_text="Tasa de IVA a aplicar. Ej: 0.21 para un 21%."
     )
 
+    @transaction.atomic
     def _distribuir_coste(self, coste_total_pedido, campo_articulo_destino):
         """
-        Función genérica para distribuir un coste total del pedido 
+        Función genérica para distribuir un coste total del pedido
         entre sus artículos de forma proporcional a su 'coste_euro'.
+
+        OPTIMIZACIÓN: Envuelto en @transaction.atomic para garantizar
+        que todos los artículos se actualicen o ninguno (rollback automático en caso de error).
         """
         articulos_a_actualizar = []
         articulos = self.articulos.all()
@@ -60,6 +64,12 @@ class Pedido(models.Model):
 
     class Meta:
         ordering = ['-fecha_pedido']
+        indexes = [
+            # Índice para ordering y filtros por fecha
+            models.Index(fields=['-fecha_pedido'], name='idx_pedido_fecha'),
+            # Índice para búsquedas por descripción (usado en search_fields de Articulo)
+            models.Index(fields=['descripcion'], name='idx_pedido_desc'),
+        ]
 
 
 class Marca(models.Model):
@@ -130,3 +140,17 @@ class Articulo(models.Model):
 
     class Meta:
         ordering = ['nombre']
+        indexes = [
+            # Índice para ordering y búsquedas por nombre
+            models.Index(fields=['nombre'], name='idx_articulo_nombre'),
+            # Índice para filtros por tipo de artículo
+            models.Index(fields=['tipo_articulo'], name='idx_articulo_tipo'),
+            # Índice para filtros por estado
+            models.Index(fields=['estado'], name='idx_articulo_estado'),
+            # Índice compuesto para queries comunes: artículos de un pedido por estado
+            models.Index(fields=['pedido', 'estado'], name='idx_articulo_pedido_estado'),
+            # Índice para ordenar por precio de venta
+            models.Index(fields=['precio_venta'], name='idx_articulo_precio_venta'),
+            # Índice para búsquedas por id_buyee (aunque ya es único, ayuda en búsquedas)
+            models.Index(fields=['id_buyee'], name='idx_articulo_id_buyee'),
+        ]

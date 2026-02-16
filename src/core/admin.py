@@ -16,6 +16,8 @@ admin.site.index_title = "Bienvenido al portal de ERP Camaras"
 # --- ACCIONES DE ADMIN ---
 @admin.action(description="1. Distribuir gastos de aduana")
 def distribuir_aduana_action(modeladmin, request, queryset):
+    # OPTIMIZACIÓN: prefetch_related para evitar N+1 queries
+    queryset = queryset.prefetch_related('articulos')
     for pedido in queryset:
         pedido.distribuir_gastos_aduana()
     modeladmin.message_user(request, "Gastos de aduana distribuidos.", "success")
@@ -23,6 +25,8 @@ def distribuir_aduana_action(modeladmin, request, queryset):
 
 @admin.action(description="2. Distribuir coste de envío agrupado")
 def distribuir_envio_action(modeladmin, request, queryset):
+    # OPTIMIZACIÓN: prefetch_related para evitar N+1 queries
+    queryset = queryset.prefetch_related('articulos')
     for pedido in queryset:
         pedido.distribuir_coste_envio()
     modeladmin.message_user(request, "Coste de envío agrupado distribuido.", "success")
@@ -120,11 +124,14 @@ class ArticuloAdmin(admin.ModelAdmin):
     # --- (El resto de tus métodos: get_queryset, etc., se quedan igual PERO changelist_view cambia) ---
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
+        # OPTIMIZACIÓN: select_related para evitar N+1 queries en pedido y marca
+        queryset = queryset.select_related('pedido', 'marca')
+
         zero = Value(0, output_field=DecimalField())
         coste_total_expr = (
-            Coalesce(F('coste_euro'), zero) + Coalesce(F('iva'), zero) + 
-            Coalesce(F('coste_envio_individual'), zero) + 
-            Coalesce(F('aduana_imputada'), zero) + 
+            Coalesce(F('coste_euro'), zero) + Coalesce(F('iva'), zero) +
+            Coalesce(F('coste_envio_individual'), zero) +
+            Coalesce(F('aduana_imputada'), zero) +
             Coalesce(F('coste_envio_nacional'), zero)
         )
         queryset = queryset.annotate(
